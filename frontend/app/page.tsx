@@ -1,6 +1,6 @@
 'use client';
 import { fetchLatestFilms, getPopularFilms } from '@/lib/api';
-import FilmsRow from './components/layout/films/FilmsRow';
+import FilmsRow from './components/films/FilmsRow';
 
 export default function Home() {
   return (
