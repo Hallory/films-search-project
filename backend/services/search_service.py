@@ -1,6 +1,8 @@
 from db.tmdb_mysql import (
     search_titles_by_keyword,
+    count_titles_by_keyword,
     search_people_by_name,
+    count_people_by_name,
     get_titles_for_person,
 )
 from services.tmdb_media_mapper import map_title_rows
@@ -12,26 +14,27 @@ from schemas.films import (
     ActorHit,
 )
 
-def search_all(query: str, limit_per_section: int = 20) -> CombinedSearchResponse:
-    # --- Films by title/keyword ---
-    rows = search_titles_by_keyword(keyword=query, limit=limit_per_section, offset=0)
+def search_all(query: str, limit_per_section: int = 20, title_offset: int = 0) -> CombinedSearchResponse:
+    # q = query.strip()
+    # if len(q) < 2:
+    #     return CombinedSearchResponse(
+    #         query=q,
+    #         by_title=FilmResponse(items=[], offset=0, limit=limit_per_section, count=0),
+    #         by_actor=ActorSearchResponse(items=[], count=0),
+    #     )
+    total_titles = count_titles_by_keyword(keyword=query)
+    rows = search_titles_by_keyword(keyword=query, limit=limit_per_section, offset=title_offset)
     rows = map_title_rows(rows)
-
-    if not rows:
-        return CombinedSearchResponse(query=query, by_title=FilmResponse(items=[], count=0), by_actor=ActorSearchResponse(items=[], count=0))
 
     by_title = FilmResponse(
         items=[Film(**r) for r in rows],
-        offset=0,
+        offset=title_offset,
         limit=limit_per_section,
-        count=len(rows),
+        count=total_titles,
     )
 
-    # --- Actors by name ---
+    total_actors = count_people_by_name(name=query)
     people = search_people_by_name(name=query, limit=limit_per_section, offset=0)
-
-    if not people:
-        return CombinedSearchResponse(query=query, by_title=by_title, by_actor=ActorSearchResponse(items=[], count=0))
 
     actor_items: list[ActorHit] = []
     for p in people:
@@ -48,7 +51,7 @@ def search_all(query: str, limit_per_section: int = 20) -> CombinedSearchRespons
             )
         )
 
-    by_actor = ActorSearchResponse(items=actor_items, count=len(actor_items))
+    by_actor = ActorSearchResponse(items=actor_items, count=total_actors)
 
     return CombinedSearchResponse(query=query, by_title=by_title, by_actor=by_actor)
 

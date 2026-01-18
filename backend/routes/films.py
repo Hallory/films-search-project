@@ -1,9 +1,9 @@
-from operator import ge
 from fastapi import APIRouter, HTTPException, Query
+from mongo_queries import get_recent_genre_searches
 from schemas.films import ActorSearchResponse
 from log_writer import log_film_view, log_search, update_films_stats
 from mongo_queries import get_popular_search_queries
-from schemas.films import  CombinedSearchResponse, Film, FilmResponse, Genre, GenresResponse, YearsRange, SearchLogIn, FilmViewIn, PopularQueriesResponse
+from schemas.films import  ActorHit, CombinedSearchResponse, Film, FilmDetail, FilmResponse, Genre, GenresResponse, YearsRange, SearchLogIn, FilmViewIn, PopularQueriesResponse
 from services.search_service import search_all
 from db.tmdb_mysql import (
     get_latest_titles,
@@ -14,12 +14,13 @@ from db.tmdb_mysql import (
     get_title_genres,
     get_titles_for_person,
     search_titles_by_keyword,
+    count_titles_by_keyword,
     get_title_by_id,
     get_years_range_tmdb,
 )
 from db.tmdb_mysql import get_all_tmdb_genres, get_titles_by_genre, count_titles_by_genre, get_years_range_tmdb, get_title_by_id, get_all_tmdb_genres, get_years_range_tmdb
 from services.tmdb_media_mapper import map_title_rows
-from db.tmdb_mysql import search_people_by_name
+from db.tmdb_mysql import search_people_by_name, count_people_by_name
 from services.tmdb_media_mapper import map_title_rows, build_image_url, build_profile_url
 from services.tmdb_media_mapper import map_title_rows, map_title_row
 
@@ -61,15 +62,14 @@ def list_genres():
 def search_by_keyword_route(keyword: str, offset: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=50)):
     items = search_titles_by_keyword(keyword, offset=offset, limit=limit)
     items = map_title_rows(items)
-
-    log_search(search_type="keyword", parameters={"query": keyword}, results_count=len(items))
-    update_films_stats(result_ids=[item["film_id"] for item in items])
+    total = count_titles_by_keyword(keyword)
+    
 
     return FilmResponse(
         items=[Film(**f) for f in items],
         offset=offset,
         limit=limit,
-        count=len(items),
+        count=total,
     )
 
     
@@ -123,8 +123,29 @@ def search_by_genre_and_years(
     
 
 @router.get('/search/all', response_model=CombinedSearchResponse)
-def search_all_query(query: str, limit_per_section: int = Query(10, ge=1, le=50)):
-    return search_all(query=query, limit_per_section=limit_per_section)
+def search_all_query(
+    query: str,
+    limit_per_section: int = Query(10, ge=1, le=50),
+    title_offset: int = Query(0, ge=0),
+):
+    data = search_all(query=query, limit_per_section=limit_per_section, title_offset=title_offset)
+
+    by_title_count = data.by_title.count
+    by_actor_count = data.by_actor.count
+    total = by_title_count + by_actor_count
+
+    log_search(
+        search_type="all",
+        parameters={
+            "query": query,
+            "limit_per_section": limit_per_section,
+            "title_offset": title_offset,
+            "by_title": by_title_count,
+            "by_actor": by_actor_count,
+        },
+        results_count=total,
+    )
+    return data
 
 
 @router.post('/analytics/search')
@@ -159,6 +180,11 @@ def popular_queries(limit: int = Query(5, ge=1, le=50), min_results: int = Query
     return {"items": items, "count": len(items)}
     
     
+@router.get('/analytics/recent-genre-searches')
+def recent_genre_searches(limit: int = Query(5, ge=1, le=50)):
+    rows = get_recent_genre_searches(limit=limit)
+    return {"items": rows, "count": len(rows)}
+
 @router.get('/{film_id}')
 def film_detail(film_id: int):
     film = get_title_by_id(film_id)
@@ -227,9 +253,10 @@ def get_actor(actor_id: int):
         "films": films,
     }
 
-@router.get("/search/actor", response_model=ActorSearchResponse)
+@router.get("/search/actor", response_model=ActorSearchResponse) 
 def search_actor(full_name: str, limit: int = Query(10, ge=1, le=20), offset: int = Query(0, ge=0)):
     people = search_people_by_name(full_name, limit=limit, offset=offset)
+    total = count_people_by_name(full_name)
 
     items = []
     for p in people:
@@ -241,6 +268,7 @@ def search_actor(full_name: str, limit: int = Query(10, ge=1, le=20), offset: in
             "full_name": p["name"],
             "films": films,
         })
+        
 
-    return {"items": items, "count": len(items)}
+    return {"items": items, "count": total}
 

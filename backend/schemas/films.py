@@ -1,4 +1,3 @@
-from typing import Any
 
 from pydantic import BaseModel
 
@@ -11,12 +10,13 @@ class Film(BaseModel):
     rating: float | None = None
     poster_url: str | None = None
     backdrop_url: str | None = None
+    trailer_key: str | None = None
     
 class FilmResponse(BaseModel):
-    items: list[Film]
-    offset: int
-    limit: int
-    count: int
+    items: list[Film] = []
+    offset: int = 0
+    limit: int = 10
+    count: int = 0
 
 class Genre(BaseModel):
     genre_id: int
@@ -46,10 +46,16 @@ class ActorSearchResponse(BaseModel):
     items: list[ActorHit]
     count: int
 
+class SearchBreakdown(BaseModel):
+    by_title: int = 0
+    by_actor: int = 0
+
 class SearchLogIn(BaseModel):
     search_type: str
-    parameters: dict[str, Any]
+    parameters: dict
     results_count: int
+    breakdown: SearchBreakdown | None = None
+    source: str | None = None
 
 class FilmViewIn(BaseModel):
     film_id: int

@@ -59,6 +59,16 @@ def search_titles_by_keyword(keyword: str, limit: int = 10, offset: int = 0) -> 
     return query_all(sql, (keyword, limit, offset))
 
 
+def count_titles_by_keyword(keyword: str) -> int:
+    sql = """
+        SELECT COUNT(*) AS cnt
+        FROM tmdb_titles
+        WHERE title LIKE CONCAT('%', %s, '%');
+    """
+    row = query_one(sql, (keyword,))
+    return int(row["cnt"]) if row and row.get("cnt") is not None else 0
+
+
 def get_title_by_id(film_id: int) -> dict | None:
     sql = """
         SELECT
@@ -197,6 +207,16 @@ def search_people_by_name(name: str, limit: int = 10, offset: int = 0) -> list[d
         LIMIT %s OFFSET %s;
     """
     return query_all(sql, (name, limit, offset))
+
+
+def count_people_by_name(name: str) -> int:
+    sql = """
+        SELECT COUNT(*) AS cnt
+        FROM tmdb_people
+        WHERE name LIKE CONCAT('%', %s, '%');
+    """
+    row = query_one(sql, (name,))
+    return int(row["cnt"]) if row and row.get("cnt") is not None else 0
 
 
 
