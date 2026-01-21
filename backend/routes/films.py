@@ -82,7 +82,17 @@ def search_by_keyword_route(keyword: str, offset: int = Query(0, ge=0), limit: i
     items = search_titles_by_keyword(keyword, offset=offset, limit=limit)
     items = map_title_rows(items)
     total = count_titles_by_keyword(keyword)
-    
+
+    log_search(
+        search_type="title",
+        parameters={
+            "query": keyword,
+            "offset": offset,
+            "limit": limit,
+        },
+        results_count=total,
+    )
+
 
     return FilmResponse(
         items=[Film(**f) for f in items],
@@ -176,7 +186,7 @@ def search_all_query(
             "by_title": by_title_count,
             "by_actor": by_actor_count,
         },
-        results_count = len(data.by_title.items) + len(data.by_actor.items),
+        results_count=total,
     )
     return data
 
@@ -199,7 +209,11 @@ def log_film_view_route(payload: FilmViewIn):
 
 
 @router.get('/analytics/popular-queries', response_model=PopularQueriesResponse)
-def popular_queries(limit: int = Query(5, ge=1, le=50), min_results: int = Query(1, ge=0), search_type: str | None = Query("keyword")):
+def popular_queries(
+    limit: int = Query(5, ge=1, le=50),
+    min_results: int = Query(1, ge=0),
+    search_type: str | None = Query(None),
+):
     search_type = search_type or None
     rows = get_popular_search_queries(limit=limit, min_results=min_results, search_type=search_type)
     items = [
@@ -288,6 +302,7 @@ def get_actor(actor_id: int):
 
 @router.get("/search/actor", response_model=ActorSearchResponse) 
 def search_actor(full_name: str, limit: int = Query(10, ge=1, le=20), offset: int = Query(0, ge=0)):
+    full_name = full_name.strip()
     logger.info("search/actor full_name=%s offset=%s limit=%s", full_name, offset, limit)
     people = search_people_by_name(full_name, limit=limit, offset=offset)
     total = count_people_by_name(full_name)
@@ -303,6 +318,16 @@ def search_actor(full_name: str, limit: int = Query(10, ge=1, le=20), offset: in
             "films": films,
         })
         
+
+    log_search(
+        search_type="actor",
+        parameters={
+            "query": full_name,
+            "offset": offset,
+            "limit": limit,
+        },
+        results_count=total,
+    )
 
     return {"items": items, "count": total}
 

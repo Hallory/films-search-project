@@ -11,6 +11,7 @@ dbconfig = {
     'user': settings.MYSQL_USER,
     'password': settings.MYSQL_PASSWORD,
     'host': settings.MYSQL_HOST,
+    'port': settings.MYSQL_PORT,
     'database': settings.MYSQL_DB
 }
 

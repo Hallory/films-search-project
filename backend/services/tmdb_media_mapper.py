@@ -1,8 +1,10 @@
 import os
+from settings import settings
 
-TMDB_IMAGE_BASE = os.getenv("TMDB_IMAGE_BASE", "https://image.tmdb.org/t/p")
-TMDB_POSTER_SIZE = os.getenv("TMDB_POSTER_SIZE", "w342")
-TMDB_BACKDROP_SIZE = os.getenv("TMDB_BACKDROP_SIZE", "w780")
+TMDB_IMAGE_BASE = settings.TMDB_IMAGE_BASE
+TMDB_POSTER_SIZE = settings.TMDB_POSTER_SIZE
+TMDB_BACKDROP_SIZE = settings.TMDB_BACKDROP_SIZE
+
 
 
 def build_image_url(path: str | None, size: str) -> str | None:

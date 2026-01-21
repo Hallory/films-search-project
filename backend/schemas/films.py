@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class Film(BaseModel):
     film_id: int
@@ -13,7 +13,7 @@ class Film(BaseModel):
     trailer_key: str | None = None
     
 class FilmResponse(BaseModel):
-    items: list[Film] = []
+    items: list[Film] = Field(default_factory=list)
     offset: int = 0
     limit: int = 10
     count: int = 0
