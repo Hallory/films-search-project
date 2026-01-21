@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, HTTPException, Query
 
 from services.search_service import search_all
@@ -39,6 +40,8 @@ from schemas.films import (
 )
 
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix='/films',tags=['films'])
 
 @router.get('/latest', response_model=FilmResponse)
@@ -75,6 +78,7 @@ def list_genres():
 @router.get('/search/keyword', response_model=FilmResponse)
 def search_by_keyword_route(keyword: str, offset: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=50)):
     keyword = keyword.strip()
+    logger.info("search/keyword keyword=%s offset=%s limit=%s", keyword, offset, limit)
     items = search_titles_by_keyword(keyword, offset=offset, limit=limit)
     items = map_title_rows(items)
     total = count_titles_by_keyword(keyword)
@@ -101,6 +105,14 @@ def search_by_genre_and_years(
     limit: int = Query(10, ge=1, le=50),
     offset: int = Query(0, ge=0),
 ):
+    logger.info(
+        "search/genre genre_id=%s year_from=%s year_to=%s offset=%s limit=%s",
+        genre_id,
+        year_from,
+        year_to,
+        offset,
+        limit,
+    )
     items = get_titles_by_genre(
         genre_id=genre_id,
         year_from=year_from,
@@ -143,6 +155,12 @@ def search_all_query(
     limit_per_section: int = Query(10, ge=1, le=50),
     title_offset: int = Query(0, ge=0),
 ):
+    logger.info(
+        "search/all query=%s limit_per_section=%s title_offset=%s",
+        query,
+        limit_per_section,
+        title_offset,
+    )
     data = search_all(query=query, limit_per_section=limit_per_section, title_offset=title_offset)
 
     by_title_count = data.by_title.count
@@ -270,6 +288,7 @@ def get_actor(actor_id: int):
 
 @router.get("/search/actor", response_model=ActorSearchResponse) 
 def search_actor(full_name: str, limit: int = Query(10, ge=1, le=20), offset: int = Query(0, ge=0)):
+    logger.info("search/actor full_name=%s offset=%s limit=%s", full_name, offset, limit)
     people = search_people_by_name(full_name, limit=limit, offset=offset)
     total = count_people_by_name(full_name)
 

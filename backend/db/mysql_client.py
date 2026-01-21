@@ -1,5 +1,6 @@
 import mysql.connector
 from mysql.connector import Error
+import logging
 
 from settings import settings
 
@@ -15,6 +16,8 @@ dbconfig = {
 
 _cfg = dbconfig.copy()
 
+logger = logging.getLogger(__name__)
+
 def query_all(sql: str, params: tuple = ()) -> list[dict]:
     try:
         with mysql.connector.connect(**_cfg) as conn:
@@ -22,6 +25,7 @@ def query_all(sql: str, params: tuple = ()) -> list[dict]:
                 cur.execute(sql, params)
                 return cur.fetchall()
     except Error as e:
+        logger.exception("MySQL query failed: %s", sql)
         raise DatabaseError("DB query failed") from e
 
 def query_one(sql: str, params: tuple = ()) -> dict | None:
