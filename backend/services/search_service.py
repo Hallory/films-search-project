@@ -1,4 +1,4 @@
-from db.tmdb_mysql import (
+from db.tmdb_mysql_queries import (
     search_titles_by_keyword,
     count_titles_by_keyword,
     search_people_by_name,
@@ -15,15 +15,15 @@ from schemas.films import (
 )
 
 def search_all(query: str, limit_per_section: int = 20, title_offset: int = 0) -> CombinedSearchResponse:
-    # q = query.strip()
+    q = query.strip()
     # if len(q) < 2:
     #     return CombinedSearchResponse(
     #         query=q,
     #         by_title=FilmResponse(items=[], offset=0, limit=limit_per_section, count=0),
     #         by_actor=ActorSearchResponse(items=[], count=0),
     #     )
-    total_titles = count_titles_by_keyword(keyword=query)
-    rows = search_titles_by_keyword(keyword=query, limit=limit_per_section, offset=title_offset)
+    total_titles = count_titles_by_keyword(keyword=q)
+    rows = search_titles_by_keyword(keyword=q, limit=limit_per_section, offset=title_offset)
     rows = map_title_rows(rows)
 
     by_title = FilmResponse(
@@ -33,8 +33,8 @@ def search_all(query: str, limit_per_section: int = 20, title_offset: int = 0) -
         count=total_titles,
     )
 
-    total_actors = count_people_by_name(name=query)
-    people = search_people_by_name(name=query, limit=limit_per_section, offset=0)
+    total_actors = count_people_by_name(name=q)
+    people = search_people_by_name(name=q, limit=limit_per_section, offset=0)
 
     actor_items: list[ActorHit] = []
     for p in people:
@@ -53,5 +53,5 @@ def search_all(query: str, limit_per_section: int = 20, title_offset: int = 0) -
 
     by_actor = ActorSearchResponse(items=actor_items, count=total_actors)
 
-    return CombinedSearchResponse(query=query, by_title=by_title, by_actor=by_actor)
+    return CombinedSearchResponse(query=q, by_title=by_title, by_actor=by_actor)
 

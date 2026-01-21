@@ -1,28 +1,42 @@
 from fastapi import APIRouter, HTTPException, Query
-from mongo_queries import get_recent_genre_searches
-from schemas.films import ActorSearchResponse
-from log_writer import log_film_view, log_search, update_films_stats
-from mongo_queries import get_popular_search_queries
-from schemas.films import  ActorHit, CombinedSearchResponse, Film, FilmDetail, FilmResponse, Genre, GenresResponse, YearsRange, SearchLogIn, FilmViewIn, PopularQueriesResponse
+
 from services.search_service import search_all
-from db.tmdb_mysql import (
+from services.mongo_logger import log_film_view, log_search, update_films_stats
+from services.tmdb_media_mapper import map_title_rows, map_title_row, build_profile_url
+
+from db.tmdb_mysql_queries import (
     get_latest_titles,
-    get_person_by_id,
     get_popular_titles,
-    get_title_cast,
-    get_title_crew_key_people,
-    get_title_genres,
-    get_titles_for_person,
-    search_titles_by_keyword,
-    count_titles_by_keyword,
     get_title_by_id,
     get_years_range_tmdb,
+    get_all_tmdb_genres,
+    get_titles_by_genre,
+    count_titles_by_genre,
+    search_titles_by_keyword,
+    count_titles_by_keyword,
+    get_person_by_id,
+    search_people_by_name,
+    count_people_by_name,
+    get_titles_for_person,
+    get_title_genres,
+    get_title_cast,
+    get_title_crew_key_people,
 )
-from db.tmdb_mysql import get_all_tmdb_genres, get_titles_by_genre, count_titles_by_genre, get_years_range_tmdb, get_title_by_id, get_all_tmdb_genres, get_years_range_tmdb
-from services.tmdb_media_mapper import map_title_rows
-from db.tmdb_mysql import search_people_by_name, count_people_by_name
-from services.tmdb_media_mapper import map_title_rows, build_image_url, build_profile_url
-from services.tmdb_media_mapper import map_title_rows, map_title_row
+
+from db.mongo_analytics_queries import get_popular_search_queries, get_recent_genre_searches
+
+from schemas.films import (
+    CombinedSearchResponse,
+    Film,
+    FilmResponse,
+    Genre,
+    GenresResponse,
+    YearsRange,
+    SearchLogIn,
+    FilmViewIn,
+    PopularQueriesResponse,
+    ActorSearchResponse,
+)
 
 
 router = APIRouter(prefix='/films',tags=['films'])
@@ -60,6 +74,7 @@ def list_genres():
     
 @router.get('/search/keyword', response_model=FilmResponse)
 def search_by_keyword_route(keyword: str, offset: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=50)):
+    keyword = keyword.strip()
     items = search_titles_by_keyword(keyword, offset=offset, limit=limit)
     items = map_title_rows(items)
     total = count_titles_by_keyword(keyword)
@@ -137,13 +152,13 @@ def search_all_query(
     log_search(
         search_type="all",
         parameters={
-            "query": query,
+            "query": data.query,
             "limit_per_section": limit_per_section,
             "title_offset": title_offset,
             "by_title": by_title_count,
             "by_actor": by_actor_count,
         },
-        results_count=total,
+        results_count = len(data.by_title.items) + len(data.by_actor.items),
     )
     return data
 

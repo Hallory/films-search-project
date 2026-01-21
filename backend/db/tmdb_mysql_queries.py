@@ -1,4 +1,4 @@
-from repositories.mysql_repo import query_all, query_one
+from .mysql_client import query_all, query_one
 
 
 def get_latest_titles(limit: int = 10, offset: int = 0) -> list[dict]:
@@ -101,7 +101,6 @@ def get_years_range_tmdb() -> dict:
     return row or {"min_year": None, "max_year": None}
 
 
-from repositories.mysql_repo import query_all, query_one
 
 def get_all_tmdb_genres() -> list[dict]:
     sql = """
@@ -193,7 +192,6 @@ def count_titles_by_genre(
     return int(row["cnt"]) if row and row.get("cnt") is not None else 0
 
 
-from repositories.mysql_repo import query_all, query_one
 
 def search_people_by_name(name: str, limit: int = 10, offset: int = 0) -> list[dict]:
     sql = """
