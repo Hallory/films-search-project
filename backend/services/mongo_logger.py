@@ -8,13 +8,23 @@ from db.mongo_client import (
 )
 
 logger = logging.getLogger(__name__)
+def _normalize_parameters(search_type: str, parameters: dict) -> dict:
+    p = dict(parameters or {})
+
+    if "query" in p and isinstance(p["query"], str):
+        p["query"] = p["query"].strip().lower()
+
+    if "full_name" in p and isinstance(p["full_name"], str):
+        p["full_name"] = p["full_name"].strip().lower()
+
+    return p
 
 
 def log_search(search_type: str, parameters: dict, results_count: int) -> None:
     doc = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "search_type": search_type,
-        "parameters": parameters,
+        "parameters": _normalize_parameters(search_type, parameters),
         "results_count": results_count,
     }
     try:
