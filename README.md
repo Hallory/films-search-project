@@ -77,12 +77,3 @@ From `backend/`:
 - Install dev deps: `pip install -r requirements-dev.txt`
 - Run: `python -m pytest`
 
-## Optional Screenshots
-If screenshots are needed for presentation, place them in a `docs/` folder:
-- `docs/ui-search.png`
-- `docs/analytics-popular.png`
-- `docs/mongo-log-entry.png`
-
-## Notes
-- MySQL stores film and people data (TMDB-based schema).
-- MongoDB stores analytics logs and film stats.
