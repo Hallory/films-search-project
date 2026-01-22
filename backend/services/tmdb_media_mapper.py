@@ -1,4 +1,3 @@
-import os
 from settings import settings
 
 TMDB_IMAGE_BASE = settings.TMDB_IMAGE_BASE
