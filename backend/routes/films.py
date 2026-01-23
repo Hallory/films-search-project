@@ -83,15 +83,16 @@ def search_by_keyword_route(keyword: str, offset: int = Query(0, ge=0), limit: i
     items = map_title_rows(items)
     total = count_titles_by_keyword(keyword)
 
-    log_search(
-        search_type="title",
-        parameters={
-            "query": keyword,
-            "offset": offset,
-            "limit": limit,
-        },
-        results_count=total,
-    )
+    if offset == 0:
+        log_search(
+            search_type="title",
+            parameters={
+                "query": keyword,
+                "offset": offset,
+                "limit": limit,
+            },
+            results_count=total,
+        )
 
 
     return FilmResponse(
@@ -138,18 +139,18 @@ def search_by_genre_and_years(
 
     items = map_title_rows(items)
 
-    log_search(
-        search_type="genre",
-        parameters={
-            "genre_id": genre_id,
-            "year_from": year_from,
-            "year_to": year_to,
-            "offset": offset,
-            "limit": limit,
-        },
-        results_count=len(items),
-    )
-
+    if offset == 0:
+        log_search(
+            search_type="genre",
+            parameters={
+                "genre_id": genre_id,
+                "year_from": year_from,
+                "year_to": year_to,
+                "offset": offset,
+                "limit": limit,
+            },
+            results_count=total,
+        )
     return FilmResponse(
         items=[Film(**f) for f in items],
         offset=offset,
@@ -177,17 +178,16 @@ def search_all_query(
     by_actor_count = data.by_actor.count
     total = by_title_count + by_actor_count
 
-    log_search(
-        search_type="all",
-        parameters={
-            "query": data.query,
-            "limit_per_section": limit_per_section,
-            "title_offset": title_offset,
-            "by_title": by_title_count,
-            "by_actor": by_actor_count,
-        },
-        results_count=total,
-    )
+    if title_offset == 0:
+        log_search(
+            search_type="all",
+            parameters={
+                "query": query,
+                "limit_per_section": limit_per_section,
+                "title_offset": title_offset,
+            },
+            results_count=total,
+        )
     return data
 
 
@@ -319,15 +319,15 @@ def search_actor(full_name: str, limit: int = Query(10, ge=1, le=20), offset: in
         })
         
 
-    log_search(
-        search_type="actor",
-        parameters={
-            "query": full_name,
-            "offset": offset,
-            "limit": limit,
-        },
-        results_count=total,
-    )
-
+    if offset == 0:
+        log_search(
+            search_type="actor",
+            parameters={
+                "query": full_name,
+                "offset": offset,
+                "limit": limit,
+            },
+            results_count=total,
+        )
     return {"items": items, "count": total}
 
