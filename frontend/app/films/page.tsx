@@ -2,7 +2,6 @@
 import { searchFilmsByGenreAndYears } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
-import React from 'react';
 import FilmCardDetailed from '../components/films/FilmCardDetailed';
 import Pagination from '../components/films/pagination/Pagination';
 import FilmCardDetailedSkeleton from '../components/films/skeletons/FilmCardDetailedSkeleton';

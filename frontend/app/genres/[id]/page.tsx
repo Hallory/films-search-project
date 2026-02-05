@@ -9,6 +9,8 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 export default function GenrePage() {
+  const DEFAULT_YEAR_FROM = 1990;
+  const DEFAULT_YEAR_TO = 2025;
   const LIMIT = 20;
   const [page, setPage] = useState(1);
   const offset = (page - 1) * LIMIT;
@@ -27,7 +29,14 @@ export default function GenrePage() {
   }, [genreId]);
   const { data, isLoading } = useQuery({
     queryKey: ['films', 'genre', genreId, page],
-    queryFn: () => searchFilmsByGenreAndYears(genreId, 1900, 2100, offset, LIMIT),
+    queryFn: () =>
+      searchFilmsByGenreAndYears(
+        genreId,
+        DEFAULT_YEAR_FROM,
+        DEFAULT_YEAR_TO,
+        offset,
+        LIMIT,
+      ),
     enabled: Number.isFinite(genreId),
   });
   const genreName = genres?.items?.find((g) => g.genre_id === genreId)?.name ?? 'Genre';
